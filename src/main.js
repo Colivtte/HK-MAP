@@ -140,8 +140,9 @@ const map = new maplibregl.Map({
   ...INIT_VIEW,
   minZoom: 9.5, maxZoom: 15.5,
   attributionControl: false,
-  dragRotate: false, pitchWithRotate: false, touchZoomRotate: false,
+  dragRotate: false, pitchWithRotate: false,
 });
+map.touchZoomRotate.disableRotation(); // 双指捏合缩放可用，但禁用双指旋转防误操作
 map.addControl(new maplibregl.AttributionControl({
   compact: true,
   customAttribution: '<span class="attrib-hint">点击分区查看概览 <i>◆</i> 点击图钉查看详情 <i>◆</i> 右侧隐藏面板可筛选标注</span>',
@@ -848,11 +849,11 @@ function toggleCat(catId, forceOn) {
 // ── 飞向标点并弹出详情（分区卡列表 / 侧栏分类列表共用） ──────
 function flyToPoi(poi) {
   if (!visible[poi.cat]) toggleCat(poi.cat, true);
+  closePopup();
+  // 立即弹出详情（弹窗锚定坐标，随相机一起飞），相机随后跟上
+  const el = markersByCat[poi.cat].find(m => m.getElement().dataset.pid === poi.id);
+  if (el) el.getElement().click();
   map.flyTo({ center: [poi.lng, poi.lat], zoom: 13, speed: 1.4 });
-  setTimeout(() => {
-    const el = markersByCat[poi.cat].find(m => m.getElement().dataset.pid === poi.id);
-    if (el) el.getElement().click();
-  }, 900);
 }
 
 function buildSidebar() {

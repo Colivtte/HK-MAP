@@ -60,6 +60,13 @@
 </button>
 <button id="resetView" class="reset-btn" aria-label="复位" title="复位视角">⌂</button>
 
+<!-- 竖屏提示：手机竖屏时建议横屏（可忽略，本会话不再提示） -->
+<div class="rotate-hint" id="rotateHint">
+  <div class="rh-phone"></div>
+  <div class="rh-text">建议横屏浏览<br>获得更完整的地图视野</div>
+  <button class="rh-btn" id="rotateDismiss">继续竖屏浏览</button>
+</div>
+
 <!-- 加载幕布 -->
 <div class="loading-veil" id="veil">
   <div class="veil-title">香江图志</div>
@@ -94,5 +101,15 @@
 <script src="data/tram.js"></script>
 <script src="data/buses.js"></script>
 <script src="src/main.js"></script>
+<script>
+// 竖屏横屏提示：用户选择继续竖屏后，本会话不再打扰
+(function () {
+  try { if (sessionStorage.getItem('hkmap-rotate-hint') === '1') document.body.classList.add('rotate-dismissed'); } catch (e) {}
+  document.getElementById('rotateDismiss').addEventListener('click', function () {
+    document.body.classList.add('rotate-dismissed');
+    try { sessionStorage.setItem('hkmap-rotate-hint', '1'); } catch (e) {}
+  });
+})();
+</script>
 </body>
 </html>

@@ -458,6 +458,46 @@ body.names-on .poi-name, .poi:hover .poi-name { opacity: 1; }
   vertical-align: 2px; margin: 0 4px;
 }
 
+/* ── 竖屏横屏提示（手机竖屏时显示一次，可忽略） ── */
+.rotate-hint {
+  position: absolute; inset: 0; z-index: 60;
+  display: none; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+  background: rgba(20, 26, 36, 0.94); color: #FFF6DC;
+}
+.rh-phone {
+  width: 60px; height: 96px; border: 3px solid var(--gold); border-radius: 12px;
+  animation: rh-rotate 1.8s ease-in-out infinite;
+}
+@keyframes rh-rotate {
+  0%, 25% { transform: rotate(0); }
+  60%, 100% { transform: rotate(90deg); }
+}
+.rh-text { font-size: 15px; letter-spacing: 2px; text-align: center; line-height: 1.9; }
+.rh-btn {
+  border: 1px solid rgba(216, 179, 106, 0.6); background: rgba(216, 179, 106, 0.14);
+  color: var(--gold); padding: 9px 20px; border-radius: 18px; font-size: 13px; letter-spacing: 1px; cursor: pointer;
+}
+.rh-btn:hover { background: rgba(216, 179, 106, 0.3); }
+@media (max-width: 720px) and (orientation: portrait) {
+  body:not(.rotate-dismissed) .rotate-hint { display: flex; }
+}
+
+/* ── 手机横屏：高度紧凑适配（桌面式布局但触控目标保留） ── */
+@media (max-height: 500px) {
+  .filter-panel { bottom: 16px; max-height: calc(100vh - 80px); }
+  .district-panel { top: 12px; bottom: 12px; }
+  .attrib-hint { display: none; }
+  .cat-row { padding: 13px 12px; }
+  .mtr-row { padding: 12px; }
+  .cat-eye, .sec-eye { width: 30px; height: 30px; margin: -7px; }
+  .cat-caret { width: 30px; height: 30px; margin: -4px 0 -4px -6px; }
+  .cat-poi-row { padding: 10px 12px 10px 30px; }
+  .panel-close { width: 38px; height: 38px; font-size: 22px; }
+  /* 横屏：筛选栏展开时按钮左移让位（星芒保留作为关闭入口） */
+  .filter-panel.open ~ .reset-btn,
+  .filter-panel.open ~ .star-toggle { right: 268px; }
+}
+
 /* ── 小屏适配 ── */
 @media (max-width: 720px) {
   .filter-panel { left: 12px; right: 12px; width: auto; bottom: 128px; }
@@ -490,3 +530,6 @@ body.names-on .poi-name, .poi:hover .poi-name { opacity: 1; }
   .panel-close { width: 38px; height: 38px; font-size: 22px; }
   .filter-panel { bottom: calc(128px + env(safe-area-inset-bottom, 0px)); }
 }
+
+/* 标点上起手的双指手势也交给地图（不触发浏览器网页缩放） */
+.maplibregl-marker { touch-action: none; }
