@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>香江图志 · 香港分区大地图</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23E8A33D' stroke='%23FFF6E0' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="map"></div>
+<div class="vignette"></div>
+
+<!-- 地点筛选弹窗（右下星芒按钮开关） -->
+<div class="filter-panel" id="filterPanel">
+  <aside class="sidebar">
+    <div class="sidebar-head orn"><span>地点筛选</span></div>
+    <div id="catList"><!-- JS 生成分类行 --></div>
+    <div class="sidebar-head orn mtr-head"><span>地铁路线</span><span class="sec-eye" id="mtrEye" title="显示/隐藏地铁线路"></span></div>
+    <div id="mtrList"><!-- JS 生成线路行 --></div>
+    <div class="sidebar-head orn mtr-head"><span>长线巴士</span><span class="sec-eye" id="busEye" title="显示/隐藏巴士线路"></span></div>
+    <div id="busList"><!-- JS 生成巴士行 --></div>
+    <div class="sidebar-head orn mtr-head"><span>轻铁线路</span><span class="sec-eye" id="lrtEye" title="显示/隐藏轻铁线路"></span></div>
+    <div id="lrtList"><!-- JS 生成轻铁行 --></div>
+    <div class="sidebar-head orn mtr-head"><span>电车线路</span><span class="sec-eye" id="tramEye" title="显示/隐藏电车线路"></span></div>
+    <div id="tramList"><!-- JS 生成电车行 --></div>
+    <div class="sidebar-foot" id="poiTotal"></div>
+  </aside>
+</div>
+
+<!-- 右侧：分区信息卡 -->
+<aside class="district-panel" id="districtPanel">
+  <button class="panel-close" id="panelClose" aria-label="关闭">×</button>
+  <h2 id="panelName"></h2>
+  <div class="panel-en" id="panelEn"></div>
+  <p class="panel-desc" id="panelDesc"></p>
+  <div class="panel-sub orn"><span>区内标注</span></div>
+  <div class="panel-pois" id="panelPois"></div>
+</aside>
+
+<!-- 左下：原神式缩放滑杆 -->
+<div class="zoom-widget">
+  <button id="zoomIn" class="zoom-btn" aria-label="放大"><span class="sym">+</span></button>
+  <div class="zoom-track" id="zoomTrack">
+    <svg viewBox="0 0 24 170" width="24" height="170" preserveAspectRatio="none">
+      <path d="M12 1 C16 5 22.5 10 22.5 21 L22.5 149 C22.5 160 16 165 12 169 C8 165 1.5 160 1.5 149 L1.5 21 C1.5 10 8 5 12 1 Z"
+            fill="rgba(54,68,86,0.95)" stroke="rgba(205,218,232,0.35)" stroke-width="1"/>
+      <path d="M12 8 L12 162" stroke="rgba(10,18,28,0.3)" stroke-width="7" stroke-linecap="round"/>
+    </svg>
+    <div class="zoom-thumb" id="zoomThumb"></div>
+  </div>
+  <button id="zoomOut" class="zoom-btn" aria-label="缩小"><span class="sym">−</span></button>
+</div>
+
+<!-- 右下：标注显隐开关 + 复位 -->
+<button id="starToggle" class="star-toggle" aria-label="显示/隐藏标注" title="显示/隐藏标注">
+  <svg viewBox="0 0 24 24"><path d="M12 2 C12.6 7.2 16.8 11.4 22 12 C16.8 12.6 12.6 16.8 12 22 C11.4 16.8 7.2 12.6 2 12 C7.2 11.4 11.4 7.2 12 2 Z"/></svg>
+</button>
+<button id="resetView" class="reset-btn" aria-label="复位" title="复位视角">⌂</button>
+
+<!-- 加载幕布 -->
+<div class="loading-veil" id="veil">
+  <div class="veil-title">香江图志</div>
+  <div class="veil-orn orn"><span>提瓦特·香江分卷</span></div>
+  <div class="veil-dia"></div>
+  <div class="veil-sub">正在铺开地图……</div>
+</div>
+
+<!-- rAF 看门狗：窗口被遮挡/后台标签时 Chromium 会停掉渲染帧循环，
+     1.5s 内探测不到帧回调则切换为定时器驱动，保证地图仍能完成初始化 -->
+<script>
+(function () {
+  var native = window.requestAnimationFrame.bind(window);
+  var throttled = false, firedAny = false;
+  window.__rafDebug = { throttled: false, firedAny: false };
+  native(function () { firedAny = true; window.__rafDebug.firedAny = true; });
+  setTimeout(function () {
+    if (!firedAny) { throttled = true; window.__rafDebug.throttled = true; }
+  }, 1500);
+  window.requestAnimationFrame = function (cb) {
+    if (throttled) return setTimeout(function () { cb(performance.now()); }, 16);
+    return native(function (t) { cb(t); });
+  };
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.min.js"></script>
+<script>window.maplibregl || document.write('<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.min.js"><\/script>')</script>
+<script src="data/districts.js"></script>
+<script src="data/pois.js"></script>
+<script src="data/mtr.js"></script>
+<script src="data/lrt.js"></script>
+<script src="data/tram.js"></script>
+<script src="data/buses.js"></script>
+<script src="src/main.js"></script>
+</body>
+</html>
